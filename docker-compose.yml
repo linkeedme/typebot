@@ -5,11 +5,12 @@ x-typebot-common: &typebot-common
       condition: service_healthy
     typebot-db:
       condition: service_healthy
-  networks:
-    - typebot-network
   env_file: .env
   environment:
     REDIS_URL: redis://typebot-redis:6379
+  networks:
+    - typebot-network
+    - dokploy-network
 
 services:
   typebot-db:
@@ -27,6 +28,7 @@ services:
       retries: 5
     networks:
       - typebot-network
+      - dokploy-network
 
   typebot-redis:
     image: redis:alpine
@@ -42,22 +44,51 @@ services:
       - redis-data:/data
     networks:
       - typebot-network
+      - dokploy-network
 
   typebot-builder:
     <<: *typebot-common
     image: baptistearno/typebot-builder:latest
     ports:
       - "8085:3000"
+    labels:
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.typebot-type-mcod90-16-web.rule=Host(`typebot.linkeed.com.br`)
+      - traefik.http.routers.typebot-type-mcod90-16-web.entrypoints=web
+      - traefik.http.services.typebot-type-mcod90-16-web.loadbalancer.server.port=3000
+      - traefik.http.routers.typebot-type-mcod90-16-web.service=typebot-type-mcod90-16-web
+      - traefik.http.routers.typebot-type-mcod90-16-web.middlewares=redirect-to-https@file
+      - traefik.http.routers.typebot-type-mcod90-16-websecure.rule=Host(`typebot.linkeed.com.br`)
+      - traefik.http.routers.typebot-type-mcod90-16-websecure.entrypoints=websecure
+      - traefik.http.services.typebot-type-mcod90-16-websecure.loadbalancer.server.port=3000
+      - traefik.http.routers.typebot-type-mcod90-16-websecure.service=typebot-type-mcod90-16-websecure
+      - traefik.http.routers.typebot-type-mcod90-16-websecure.tls.certresolver=letsencrypt
+      - traefik.enable=true
 
   typebot-viewer:
     <<: *typebot-common
     image: baptistearno/typebot-viewer:latest
     ports:
       - "8086:3000"
+    labels:
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.typebot-type-mcod90-17-web.rule=Host(`bot.linkeed.com.br`)
+      - traefik.http.routers.typebot-type-mcod90-17-web.entrypoints=web
+      - traefik.http.services.typebot-type-mcod90-17-web.loadbalancer.server.port=3000
+      - traefik.http.routers.typebot-type-mcod90-17-web.service=typebot-type-mcod90-17-web
+      - traefik.http.routers.typebot-type-mcod90-17-web.middlewares=redirect-to-https@file
+      - traefik.http.routers.typebot-type-mcod90-17-websecure.rule=Host(`bot.linkeed.com.br`)
+      - traefik.http.routers.typebot-type-mcod90-17-websecure.entrypoints=websecure
+      - traefik.http.services.typebot-type-mcod90-17-websecure.loadbalancer.server.port=3000
+      - traefik.http.routers.typebot-type-mcod90-17-websecure.service=typebot-type-mcod90-17-websecure
+      - traefik.http.routers.typebot-type-mcod90-17-websecure.tls.certresolver=letsencrypt
+      - traefik.enable=true
 
 networks:
   typebot-network:
     driver: bridge
+  dokploy-network:
+    external: true
 
 volumes:
   db-data:
