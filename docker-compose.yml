@@ -7,7 +7,7 @@ x-typebot-common: &typebot-common
       condition: service_healthy
   env_file: .env
   environment:
-    REDIS_URL: redis://typebot-redis:6379
+    REDIS_URL: redis://188.245.108.9:6379
   networks:
     - typebot-network
     - dokploy-network
@@ -30,23 +30,23 @@ services:
       - typebot-network
       - dokploy-network
 
-typebot-redis:
-  image: redis:alpine
-  restart: always
-  command: --save 60 1 --loglevel warning
-  healthcheck:
-    test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-    start_period: 20s
-    interval: 30s
-    retries: 5
-    timeout: 3s
-  volumes:
-    - redis-data:/data
-  ports:
-    - "6379:6379"
-  networks:
-    - typebot-network
-    - dokploy-network
+  typebot-redis:
+    image: redis:alpine
+    restart: always
+    command: --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 3s
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - typebot-network
+      - dokploy-network
 
   typebot-builder:
     <<: *typebot-common
